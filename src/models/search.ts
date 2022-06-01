@@ -1,4 +1,6 @@
 import axios from 'axios'
+import fs from 'fs'
+import path from 'path'
 import {
   IMapboxFeature,
   IMapboxResponse,
@@ -7,10 +9,11 @@ import {
 } from 'src/interfaces'
 
 export class Search {
-  history = []
+  history: Array<string>
+  dbPath = path.join(__dirname, '../db/history.json')
 
   constructor() {
-    // TODO: read db if exists
+    this.readDB()
   }
 
   get mapboxParams() {
@@ -26,6 +29,12 @@ export class Search {
       appid: process.env.WEATHER_KEY,
       units: 'metric',
     }
+  }
+
+  get capitalizedHistory() {
+    return this.history.map((place) =>
+      place.replace(/\w\S*/g, (w) => w.replace(/^\w/, (c) => c.toUpperCase()))
+    )
   }
 
   async city(place: string): Promise<IMapboxFeature[]> {
@@ -69,5 +78,25 @@ export class Search {
         temp: '',
       }
     }
+  }
+
+  addHistory(place: string) {
+    if (this.history.includes(place.toLocaleLowerCase())) return
+    this.history.unshift(place.toLocaleLowerCase())
+    this.history.splice(0, 4)
+    this.saveDB()
+  }
+
+  saveDB() {
+    fs.writeFileSync(this.dbPath, JSON.stringify(this.history))
+  }
+
+  readDB() {
+    if (fs.existsSync(this.dbPath)) {
+      let historyDB = fs.readFileSync(this.dbPath, { encoding: 'utf-8' })
+      this.history = JSON.parse(historyDB)
+      return
+    }
+    this.history = []
   }
 }

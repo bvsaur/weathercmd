@@ -23,6 +23,8 @@ const main = async () => {
           ({ id }) => id === selectedPlace
         )[0]
 
+        search.addHistory(place_name)
+
         const { desc, max, min, temp } = await search.weather(
           center[1],
           center[0]
@@ -37,6 +39,13 @@ const main = async () => {
         console.log('Max:', `${max}`.yellow)
         console.log('Weather Description:', `${desc}`.green)
         break
+
+      case '2':
+        console.log('\n')
+        search.capitalizedHistory.forEach((place, idx) => {
+          console.log(`${idx + 1}`.green, place)
+        })
+        console.log('\n')
     }
 
     if (option !== '0') await pause()
